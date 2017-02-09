@@ -1,6 +1,6 @@
 {
   "name": "turbo-net",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "description": "Experimental TCP library",
   "dependencies": {
