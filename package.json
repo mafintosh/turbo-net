@@ -4,6 +4,7 @@
   "main": "index.js",
   "description": "Experimental TCP library",
   "dependencies": {
+    "nan": "^2.5.1",
     "node-gyp-build": "^3.0.0",
     "unordered-set": "^2.0.0"
   },

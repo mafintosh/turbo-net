@@ -94,3 +94,7 @@ Emitted when a read returned `null` signalling no more data.
 #### `socket.on('finish')`
 
 Emitted when end has been called and all pending writes flushed.
+
+#### `socket.on('connect')`
+
+Emitted when a socket is fully connected.
