@@ -9,7 +9,12 @@
   },
   "devDependencies": {
     "prettier-bytes": "^1.0.3",
-    "speedometer": "^1.0.0"
+    "speedometer": "^1.0.0",
+    "standard": "^8.0.0"
+  },
+  "scripts": {
+    "test": "standard",
+    "install": "node-gyp-build"
   },
   "repository": {
     "type": "git",

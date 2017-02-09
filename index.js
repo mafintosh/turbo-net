@@ -188,7 +188,6 @@ Connection.prototype.destroy = function (err, cb) {
 
 Connection.prototype._pipe = function (dest, size, cb) {
   var src = this
-  var reads = []
   var writes = []
   var buffers = []
   var flushing = 0
@@ -233,6 +232,8 @@ Connection.prototype._pipe = function (dest, size, cb) {
   }
 
   function onwrite (err) {
+    if (err) return done(err)
+
     for (var i = 0; i < flushing; i++) {
       var buf = buffers[i]
       if (buf.length === size) continue
