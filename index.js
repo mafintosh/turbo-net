@@ -45,7 +45,7 @@ Server.prototype.listen = function (port, onlistening) {
   var self = this
 
   process.nextTick(function () {
-    self.handle.listen(port, '127.0.0.1')
+    self.handle.listen(port, '0.0.0.0')
     self.emit('listening')
   })
 }
