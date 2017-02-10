@@ -2,6 +2,7 @@ var binding = require('node-gyp-build')(__dirname)
 var set = require('unordered-set')
 var util = require('util')
 var events = require('events')
+var dns = require('dns')
 
 exports.createServer = function (onconnection) {
   var s = new Server()
@@ -35,18 +36,22 @@ Server.prototype.address = function () {
   return this.handle.address()
 }
 
-Server.prototype.listen = function (port, onlistening) {
+Server.prototype.listen = function (port, addr, cb) {
   if (typeof port === 'string') port = parseInt(port, 10)
   if (typeof port === 'function') return this.listen(0, port)
+  if (typeof addr === 'function') return this.listen(port, null, addr)
   if (typeof port !== 'number' || isNaN(port)) throw new Error('port is required')
 
-  if (onlistening) this.once('listening', onlistening)
+  if (!cb) cb = noop
+  if (!addr) addr = '0.0.0.0'
 
   var self = this
 
-  process.nextTick(function () {
-    self.handle.listen(port, '0.0.0.0')
+  resolve(addr, function (err, ip) {
+    if (err) return cb(err)
+    self.handle.listen(port, ip)
     self.emit('listening')
+    cb(null)
   })
 }
 
@@ -120,10 +125,18 @@ Connection.prototype._onhandle = function (handle) {
 }
 
 Connection.prototype._connect = function (port, host) {
+  if (!host) host = '127.0.0.1'
+
+  var self = this
+
   this._socketHandle = binding.create()
   this._socketHandle.context(this)
   this._socketHandle.onconnect(this._onconnect)
-  this._socketHandle.connect(port, host)
+
+  resolve(host, function (err, ip) {
+    if (err) return self.destroy(err)
+    self._socketHandle.connect(port, ip)
+  })
 }
 
 Connection.prototype.read = function (buf, cb) {
@@ -236,7 +249,7 @@ Connection.prototype._pipe = function (dest, size, cb) {
 
     for (var i = 0; i < flushing; i++) {
       var buf = buffers[i]
-      if (buf.length === size) continue
+      if (buf.length < size) continue
       src.read(buf, onread)
     }
 
@@ -347,4 +360,19 @@ function drain (list, err) {
     var req = list.shift()
     req.callback(err, null, req.buffer)
   }
+}
+
+function resolve (host, cb) {
+  if (isIPv4(host)) return process.nextTick(cb, null, host)
+  dns.lookup(host, cb)
+}
+
+function isIPv4 (ip) {
+  var n = ip.split('.')
+  if (n.length !== 4) return false
+  for (var i = 0; i < 4; i++) {
+    var part = parseInt(n[i], 10)
+    if (!(part >= 0 && part <= 255)) return false
+  }
+  return true
 }
