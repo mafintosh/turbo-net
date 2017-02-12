@@ -77,7 +77,7 @@ called.
 End the socket. Waits for all pending data to be flushed and then destroys it and calls the
 callback.
 
-#### `socket.destroy([err], [callback])
+#### `socket.destroy([err], [callback])`
 
 Destroy the socket. Optionally pass an error that is passed to pending callbacks.
 If a read/write error occurs the socket is automatically destroyed but this method is
