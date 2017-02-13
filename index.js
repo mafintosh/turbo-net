@@ -20,6 +20,9 @@ exports.connect = function (port, host) {
   return c
 }
 
+exports.Server = Server
+exports.Connection = Connection
+
 function Server () {
   events.EventEmitter.call(this)
 
