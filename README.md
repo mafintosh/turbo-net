@@ -36,6 +36,8 @@ server.listen(8080, function () {
 })
 ```
 
+## Performance
+
 Running the echo server examples in `./examples` I get the following througput on my laptop
 
 * echo-classic: 1.3GB/s at ~100MB of ram
