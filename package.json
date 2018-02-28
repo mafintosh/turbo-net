@@ -1,21 +1,19 @@
 {
   "name": "turbo-net",
-  "version": "0.0.2",
+  "version": "0.0.0",
+  "description": "Low level TCP library",
   "main": "index.js",
-  "description": "Experimental TCP library",
   "dependencies": {
-    "nan": "^2.5.1",
-    "node-gyp-build": "^3.0.0",
+    "node-gyp-build": "^3.2.2",
     "unordered-set": "^2.0.0"
   },
   "devDependencies": {
-    "prettier-bytes": "^1.0.3",
     "speedometer": "^1.0.0",
-    "standard": "^8.0.0"
+    "standard": "^11.0.0",
+    "tape": "^4.9.0"
   },
   "scripts": {
-    "test": "standard",
-    "install": "node-gyp-build"
+    "test": "standard && tape test/*.js"
   },
   "repository": {
     "type": "git",

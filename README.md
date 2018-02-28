@@ -1,100 +1,129 @@
 # turbo-net
 
-Experimental TCP library for Node.js.
-Focuses on performance and low memory footprint by allowing easy reuse of buffers while still being easy to use.
+Low level TCP library for Node.js
 
-## CURRENT STATUS: WIP AND UNSTABLE
+```
+npm install turbo-net
+```
 
 ## Usage
 
 ``` js
-var net = require('turbo-net')
+const turbo = require('turbo-net')
 
-var server = net.createServer(function (socket) {
-  var buffer = new Buffer(65536) // allocate a buffer
+// Echo server that allocates constant memory
 
-  socket.read(buffer, function onread (err, data) {
-    if (err) return console.log('error!', err)
-    if (!data) return socket.end()
-    console.log('data:', data.toString())
-    socket.read(buffer, onread)
+const server = turbo.createServer(function (socket) {
+  socket.read(Buffer.alloc(32 * 1024), function onread (err, buf, read) {
+    if (err) throw err
+    socket.write(buf, read, function (err) {
+      if (err) throw err
+      socket.read(buf, onread)
+    })
   })
 })
 
-server.listen(10000, function () {
-  console.log('Server is listening on port 10000')
+server.listen(8080, function () {
+  const socket = turbo.connect(8080)
+
+  socket.read(Buffer.alloc(32), function (err, buf, read) {
+    if (err) throw err
+    console.log(buf.toString('utf-8', 0, read))
+  })
+  socket.write(Buffer.from('hello world\n'))
 })
 ```
 
-Try running the example echo server in `./example/server.js`
-and the client `./example/client.js`.
-
-The client will write data as fast as possible to the server and print out the throughput
-Both the client and server are reusing buffers, keeping the memory usage flat.
-
-On my laptop this gets `~1.4GB/s` with 16MB ram used.
-
 ## API
 
-#### `var server = net.createServer([onconnection])`
+#### `server = turbo.createServer([options], [onsocket])`
 
-Create a new server. Optionally you can pass a onconnection handler.
+Create a new TCP server. Options include:
 
-#### `server.listen([port], [onlistening])`
+``` js
+{
+  allowHalfOpen: false // set to true to allow half open TCP connections
+}
+```
 
-Listen on a port. If port is omitted or is 0 a random port will be chosen.
+#### `server.on('connection', connection)`
 
-#### `server.on('connection', socket)`
-
-Emitted when a new socket connects
+Emitted when a new connection is established.
 
 #### `server.on('listening')`
 
-Emitted when the server is listening
+Emitted when the server is listening.
 
 #### `server.connections`
 
-An array of all connections the server currently has (order not guaranteed).
+Unordered array containing the current active connections
 
-#### `var socket = net.connect(port, [host])`
+#### `server.listen(port, [address], [onlistening])`
 
-Connect to a server.
+Listen on a port.
 
-#### `socket.read([buffer], callback)`
+#### `server.address()`
 
-Read data. Optionally you can pass in a buffer to read the data into.
-The callback is always called and will contain an error if the read failed.
-If no more data is available the callback will be called with `(null, null)`
-otherwise `(null, data)` where data is the data read.
+Similar to net.Server.address. Useful if you are listening on port 0,
+to find out which port was picked.
 
-#### `socket.write(buffer, [callback])`
+#### `server.close([onclose])`
 
-Write data. Callback is called when the write completed and is guaranteed to be
-called.
+Close the server.
 
-#### `socket.end([callback])`
+#### `connection = turbo.connect(port, host, [options])`
 
-End the socket. Waits for all pending data to be flushed and then destroys it and calls the
-callback.
+Connect to a TCP server. Options include:
 
-#### `socket.destroy([err], [callback])`
+``` js
+{
+  allowHalfOpen: false // set to true to allow half open TCP connections
+}
+```
 
-Destroy the socket. Optionally pass an error that is passed to pending callbacks.
-If a read/write error occurs the socket is automatically destroyed but this method is
-safe to call more than once.
+#### `connection.on('connect')`
 
-#### `socket.on('close')`
+Emitted when a client connection is fully connected.
 
-Emitted when a destroy has been completed and the socket is fully closed
+#### `connection.on('error', err)`
 
-#### `socket.on('end')`
+Emitted when a client fails to connect.
 
-Emitted when a read returned `null` signalling no more data.
+#### `connection.on('close')`
 
-#### `socket.on('finish')`
+Emitted a connection is fully closed. No other events will be emitted after.
 
-Emitted when end has been called and all pending writes flushed.
+#### `connection.on('finish')`
 
-#### `socket.on('connect')`
+Emitted when the writable side is fully closed.
 
-Emitted when a socket is fully connected.
+#### `connection.on('end')`
+
+Emitted when the readable side is fully closed.
+
+#### `connection.close([callback])`
+
+Closes the connection.
+
+#### `connection.read(buffer, callback)`
+
+Read data from the connection. Data will be read into the buffer you pass.
+
+The callback is called with `callback(err, buffer, bytesRead)`.
+
+If `bytesRead` is `0`, then the readable side of the connection has ended.
+
+#### `connection.write(buffer, [length], [callback])`
+
+Write data to the connection. Optionally you specify how many bytes in the
+buffer you want to write.
+
+The callback is called with `callback(err, buffer, length)`.
+
+#### `connection.end([callback])`
+
+End the writable side of the connection.
+
+## License
+
+MIT
