@@ -36,6 +36,11 @@ server.listen(8080, function () {
 })
 ```
 
+Running the echo server examples in `./examples` I get the following througput on my laptop
+
+* echo-classic: 1.3GB/s at ~100MB of ram
+* echo-turbo: 3.4GB/s at ~35MB of ram
+
 ## API
 
 #### `server = turbo.createServer([options], [onsocket])`
