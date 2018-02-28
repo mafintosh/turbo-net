@@ -6,6 +6,8 @@ Low level TCP library for Node.js
 npm install turbo-net
 ```
 
+[![build status](https://travis-ci.org/mafintosh/turbo-net.svg?branch=master)](https://travis-ci.org/mafintosh/turbo-net)
+
 ## Usage
 
 ``` js
