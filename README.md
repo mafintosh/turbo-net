@@ -129,6 +129,13 @@ buffer you want to write.
 
 The callback is called with `callback(err, buffer, length)`.
 
+#### `connection.writev(buffers, [lengths], [callback])`
+
+Write more than one buffer at once. Optionally you can specify how many bytes in
+each buffer you want to write.
+
+The callback is called with `callback(err, buffers, lengths)`
+
 #### `connection.end([callback])`
 
 End the writable side of the connection.

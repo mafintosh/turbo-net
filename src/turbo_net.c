@@ -223,6 +223,59 @@ NAPI_METHOD(turbo_net_tcp_write) {
   return NULL;
 }
 
+NAPI_METHOD(turbo_net_tcp_write_two) {
+  NAPI_ARGV(6)
+  NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
+  NAPI_ARGV_BUFFER_CAST(uv_write_t *, req, 1)
+  NAPI_ARGV_BUFFER(buffer1, 2)
+  NAPI_ARGV_UINT32(len1, 3)
+  NAPI_ARGV_BUFFER(buffer2, 4)
+  NAPI_ARGV_UINT32(len2, 5)
+
+  int err;
+  uv_buf_t buf[2];
+
+  buf[0].base = buffer1;
+  buf[0].len = len1;
+  buf[1].base = buffer2;
+  buf[1].len = len2;
+
+  NAPI_UV_THROWS(err, uv_write(req, TURBO_NET_STREAM, buf, 2, on_uv_write))
+
+  return NULL;
+}
+
+NAPI_METHOD(turbo_net_tcp_writev) {
+  NAPI_ARGV(4)
+  NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
+  NAPI_ARGV_BUFFER_CAST(uv_write_t *, req, 1)
+
+  int err;
+  uint32_t len;
+  napi_value buffers = argv[2];
+  napi_value lengths = argv[3];
+  napi_get_array_length(env, buffers, &len);
+
+  uv_buf_t bufs[len];
+  uv_buf_t *ptr = bufs;
+
+  napi_value element;
+
+  for (uint32_t i = 0; i < len; i++) {
+    napi_get_element(env, buffers, i, &element);
+    NAPI_BUFFER(next_buf, element)
+    napi_get_element(env, lengths, i, &element);
+    NAPI_UINT32(next_len, element)
+    ptr->base = next_buf;
+    ptr->len = next_len;
+    ptr++;
+  }
+
+  NAPI_UV_THROWS(err, uv_write(req, TURBO_NET_STREAM, bufs, len, on_uv_write))
+
+  return NULL;
+}
+
 NAPI_METHOD(turbo_net_tcp_shutdown) {
   NAPI_ARGV(1)
   NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
@@ -292,6 +345,8 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_connect)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_port)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_write)
+  NAPI_EXPORT_FUNCTION(turbo_net_tcp_write_two)
+  NAPI_EXPORT_FUNCTION(turbo_net_tcp_writev)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_read)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_shutdown)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_close)
