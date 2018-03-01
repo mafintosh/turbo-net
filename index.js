@@ -1,6 +1,9 @@
 const Server = require('./lib/server')
 const Connection = require('./lib/connection')
 
+exports.Server = Server
+exports.Connection = Connection
+
 exports.createServer = function (opts, onconnection) {
   if (typeof opts === 'function') return exports.createServer(null, opts)
   const server = new Server(opts)
