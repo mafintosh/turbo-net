@@ -10,10 +10,12 @@
     'xcode_settings': {
       'OTHER_CFLAGS': [
         '-O3',
+        '-std=c99'
       ]
     },
     'cflags': [
       '-O3',
+      '-std=c99'
     ],
   }]
 }
