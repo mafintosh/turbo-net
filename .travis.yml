@@ -1,5 +1,25 @@
+sudo: false
 language: node_js
 node_js:
-  - '8'
-  - '9'
-  - 'node'
+- node
+- '9'
+- '8'
+os:
+- osx
+- linux
+before_deploy:
+- ARCHIVE_NAME="${TRAVIS_TAG:-latest}-$TRAVIS_OS_NAME-`uname -m`.tar"
+- npm run prebuild
+- tar --create --verbose --file="$ARCHIVE_NAME" --directory "$TRAVIS_BUILD_DIR/prebuilds"
+  .
+deploy:
+  provider: releases
+  draft: false
+  prerelease: true
+  api_key:
+    secure: vbxTiYRg2yjqHI5rCs/1lF+qvDf7YSpwmfVYTolIt6IOm3FBumJz7OYoLu7ULvsjMUL4gZoOFpWDhofH6HWAPkNKYF5XUZZuRs8GS3fZrjoPdgWA6zrcd4/7gKAWTdUe9kLMGOdSpofUJj7+Qb3Lci8RrohzlrFLnH/LL1N0lzux2/ZTXkK7r7NJxCGfCwKZqfibwm8j37FzdjQN17b4QV5YADgg7cLx8Mz8xb6RU9eRFuWcSmcjzM4lfX9cZL9ZiL18ylIZHPDAtxN/zH7Pij50co3aL2HZvmAth+j3bmnA2olksqJHOlUqD2SGAYZfpCHF13Tsh82X4CcXFa0INNshLWwOCs0pVYuhMMXBHAFraeJRDkILajo/5x3zci/kgJ+4fAUY3TITVUAIpiyKqlMhdXDGsmW3QDYMZjazOSQ2OXaGsdyseVYpUTy30WIg+9SJrMxP1k3kjoZvx8ia3eFgCfHBYiI84fwU2uCw0rOU4m/peteMMP23GTI4pIpMdezx82eH3frrLS4B3zQrKIK5XEgEaraUELs6hRQpqfMrEcVCbRc/NM/zyKxypkp+tVF9dNx0yYliE+MYRliLSVSe9OIkO4WRffQpFdxyKtwFiQOVoL3fyEKnsD2Y64yjhZrrQHRQHYk7zhdpCbOwXfFo5koBr9sjBSLVEgD2eUY=
+  file: "$ARCHIVE_NAME"
+  skip_cleanup: true
+  on:
+    tags: true
+    node: node
