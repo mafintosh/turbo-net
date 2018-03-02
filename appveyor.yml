@@ -1,0 +1,43 @@
+build: false
+
+skip_branch_with_pr: true
+
+environment:
+  matrix:
+    - nodejs_version: "Current"
+    - nodejs_version: "9"
+    - nodejs_version: "8"
+
+configuration: Release
+platform:
+  - x86
+  - x64
+
+install:
+  - SET PATH=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin;%PATH%
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  - npm install
+
+test_script:
+  - node --version
+  - npm --version
+  - npm test
+
+after_test:
+  - ps: If ($env:nodejs_version -eq "Current") { npm run prebuild }
+
+artifacts:
+  - path: prebuilds
+    name: $(APPVEYOR_REPO_TAG_NAME)-win-$(PLATFORM)
+    type: zip
+
+deploy:
+  - provider: GitHub
+    artifact: /.*\.zip/
+    draft: false
+    prerelease: true
+    auth_token:
+      secure: Rrnh1ZoAghC7oVlq46X4NNJFi5TKEjy/Z/9IsCKdAjEDPvz2RjeuFLQlHYJUAy60
+    on:
+      appveyor_repo_tag: true
+      nodejs_version: "Current"

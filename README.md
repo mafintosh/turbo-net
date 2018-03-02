@@ -7,6 +7,7 @@ npm install turbo-net
 ```
 
 [![build status](https://travis-ci.org/mafintosh/turbo-net.svg?branch=master)](https://travis-ci.org/mafintosh/turbo-net)
+[![Build status](https://ci.appveyor.com/api/projects/status/1rbh090naan36163/branch/master?svg=true)](https://ci.appveyor.com/project/mafintosh/turbo-net/branch/master)
 
 ## Usage
 
