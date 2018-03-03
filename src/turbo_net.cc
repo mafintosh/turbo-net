@@ -46,7 +46,7 @@ typedef struct {
 static napi_ref on_fatal_exception;
 
 static void on_uv_connection (uv_stream_t* server, int status) {
-  turbo_net_tcp_t *self = server->data;
+  const turbo_net_tcp_t *self = (const turbo_net_tcp_t *) server->data;
 
   if (status < 0) return; // ignore bad connections. TODO: bubble up?
 
@@ -67,8 +67,8 @@ static void on_uv_connection (uv_stream_t* server, int status) {
 }
 
 static void on_uv_alloc (uv_handle_t *handle, size_t size, uv_buf_t *buf) {
-  turbo_net_tcp_t *self = handle->data;
-  uv_buf_t *reading = &(self->reading);
+  const turbo_net_tcp_t *self = (const turbo_net_tcp_t *) handle->data;
+  const uv_buf_t *reading = &(self->reading);
 
   buf->base = reading->base;
   buf->len = reading->len;
@@ -78,7 +78,7 @@ static void on_uv_read (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
   if (nread == 0) return;
   if (nread == UV_EOF) nread = 0;
 
-  turbo_net_tcp_t *self = stream->data;
+  turbo_net_tcp_t *self = (turbo_net_tcp_t *) stream->data;
 
   TURBO_NET_CALLBACK(self->on_read,
     napi_value result;
@@ -97,7 +97,7 @@ static void on_uv_read (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
 }
 
 static void on_uv_write (uv_write_t *req, int status) {
-  turbo_net_tcp_t *self = req->handle->data;
+  const turbo_net_tcp_t *self = (const turbo_net_tcp_t *) req->handle->data;
 
   TURBO_NET_CALLBACK(self->on_write,
     napi_value argv[1];
@@ -107,7 +107,7 @@ static void on_uv_write (uv_write_t *req, int status) {
 }
 
 static void on_uv_shutdown (uv_shutdown_t* req, int status) {
-  turbo_net_tcp_t *self = req->handle->data;
+  const turbo_net_tcp_t *self = (const turbo_net_tcp_t *) req->handle->data;
 
   TURBO_NET_CALLBACK(self->on_finish,
     napi_value argv[1];
@@ -117,7 +117,7 @@ static void on_uv_shutdown (uv_shutdown_t* req, int status) {
 }
 
 static void on_uv_close (uv_handle_t *handle) {
-  turbo_net_tcp_t *self = handle->data;
+  const turbo_net_tcp_t *self = (const turbo_net_tcp_t *) handle->data;
 
   TURBO_NET_CALLBACK(self->on_close,
     NAPI_MAKE_CALLBACK_FATAL(0, NULL, NULL)
@@ -125,7 +125,7 @@ static void on_uv_close (uv_handle_t *handle) {
 }
 
 static void on_uv_connect (uv_connect_t* req, int status) {
-  turbo_net_tcp_t *self = req->handle->data;
+  const turbo_net_tcp_t *self = (const turbo_net_tcp_t *) req->handle->data;
 
   TURBO_NET_CALLBACK(self->on_connect,
     napi_value argv[1];
