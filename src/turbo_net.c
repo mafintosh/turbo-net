@@ -2,8 +2,9 @@
 #include <node_api.h>
 #include <napi-macros.h>
 #include <stdio.h>
-#ifndef _WIN32
-#include <unistd.h>
+
+#ifdef _WIN32
+#include <stdlib.h>
 #endif
 
 #define TURBO_NET_STREAM (uv_stream_t *) &(self->handle)
@@ -46,7 +47,7 @@ typedef struct {
 static napi_ref on_fatal_exception;
 
 static void on_uv_connection (uv_stream_t* server, int status) {
-  turbo_net_tcp_t *self = server->data;
+  const turbo_net_tcp_t *self = server->data;
 
   if (status < 0) return; // ignore bad connections. TODO: bubble up?
 
@@ -67,11 +68,8 @@ static void on_uv_connection (uv_stream_t* server, int status) {
 }
 
 static void on_uv_alloc (uv_handle_t *handle, size_t size, uv_buf_t *buf) {
-  turbo_net_tcp_t *self = handle->data;
-  uv_buf_t *reading = &(self->reading);
-
-  buf->base = reading->base;
-  buf->len = reading->len;
+  const turbo_net_tcp_t *self = handle->data;
+  *buf = self->reading;
 }
 
 static void on_uv_read (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
@@ -89,15 +87,14 @@ static void on_uv_read (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
   )
 
   if (next_len) {
-    self->reading.base = next;
-    self->reading.len = next_len;
+    self->reading = (uv_buf_t) { .base = next, .len = next_len };
   } else {
     uv_read_stop(TURBO_NET_STREAM);
   }
 }
 
 static void on_uv_write (uv_write_t *req, int status) {
-  turbo_net_tcp_t *self = req->handle->data;
+  const turbo_net_tcp_t *self = req->handle->data;
 
   TURBO_NET_CALLBACK(self->on_write,
     napi_value argv[1];
@@ -107,7 +104,7 @@ static void on_uv_write (uv_write_t *req, int status) {
 }
 
 static void on_uv_shutdown (uv_shutdown_t* req, int status) {
-  turbo_net_tcp_t *self = req->handle->data;
+  const turbo_net_tcp_t *self = req->handle->data;
 
   TURBO_NET_CALLBACK(self->on_finish,
     napi_value argv[1];
@@ -117,7 +114,7 @@ static void on_uv_shutdown (uv_shutdown_t* req, int status) {
 }
 
 static void on_uv_close (uv_handle_t *handle) {
-  turbo_net_tcp_t *self = handle->data;
+  const turbo_net_tcp_t *self = handle->data;
 
   TURBO_NET_CALLBACK(self->on_close,
     NAPI_MAKE_CALLBACK_FATAL(0, NULL, NULL)
@@ -125,7 +122,7 @@ static void on_uv_close (uv_handle_t *handle) {
 }
 
 static void on_uv_connect (uv_connect_t* req, int status) {
-  turbo_net_tcp_t *self = req->handle->data;
+  const turbo_net_tcp_t *self = req->handle->data;
 
   TURBO_NET_CALLBACK(self->on_connect,
     napi_value argv[1];
@@ -179,14 +176,16 @@ NAPI_METHOD(turbo_net_tcp_listen) {
   NAPI_ARGV_UTF8(ip, 17, 2)
 
   int err;
-
   struct sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  inet_aton(ip, (struct in_addr *) &addr.sin_addr.s_addr);
-  const struct sockaddr *addr_ptr = (const struct sockaddr *) &addr;
 
-  NAPI_UV_THROWS(err, uv_tcp_bind(&(self->handle), addr_ptr, 0));
+  NAPI_UV_THROWS(err, uv_ip4_addr(ip, port, &addr));
+
+  NAPI_UV_THROWS(err, uv_tcp_bind(
+    &(self->handle),
+    (const struct sockaddr *) &addr,
+    0
+  ))
+
   // TODO: research backlog
   NAPI_UV_THROWS(err, uv_listen(TURBO_NET_STREAM, 5, on_uv_connection));
 
@@ -199,8 +198,7 @@ NAPI_METHOD(turbo_net_tcp_read) {
   NAPI_ARGV_BUFFER(buffer, 1)
 
   int err;
-  self->reading.base = buffer;
-  self->reading.len = buffer_len;
+  self->reading = (uv_buf_t) { .base = buffer, .len = buffer_len };
 
   NAPI_UV_THROWS(err, uv_read_start(TURBO_NET_STREAM, on_uv_alloc, on_uv_read))
 
@@ -215,10 +213,7 @@ NAPI_METHOD(turbo_net_tcp_write) {
   NAPI_ARGV_UINT32(len, 3)
 
   int err;
-  const uv_buf_t buf = {
-    .base = buffer,
-    .len = len
-  };
+  const uv_buf_t buf = { .base = buffer, .len = len };
 
   NAPI_UV_THROWS(err, uv_write(req, TURBO_NET_STREAM, &buf, 1, on_uv_write))
 
@@ -235,12 +230,10 @@ NAPI_METHOD(turbo_net_tcp_write_two) {
   NAPI_ARGV_UINT32(len2, 5)
 
   int err;
-  uv_buf_t buf[2];
-
-  buf[0].base = buffer1;
-  buf[0].len = len1;
-  buf[1].base = buffer2;
-  buf[1].len = len2;
+  uv_buf_t buf[2] = {
+    { .base = buffer1, .len = len1 },
+    { .base = buffer2, .len = len2 }
+  };
 
   NAPI_UV_THROWS(err, uv_write(req, TURBO_NET_STREAM, buf, 2, on_uv_write))
 
@@ -258,9 +251,14 @@ NAPI_METHOD(turbo_net_tcp_writev) {
   napi_value lengths = argv[3];
   napi_get_array_length(env, buffers, &len);
 
+#ifdef _WIN32
+  // no dynamic arrays on windows, so use malloc
+  uv_buf_t *bufs = malloc(len * sizeof(uv_buf_t));
+#else
   uv_buf_t bufs[len];
-  uv_buf_t *ptr = bufs;
+#endif
 
+  uv_buf_t *ptr = bufs;
   napi_value element;
 
   for (uint32_t i = 0; i < len; i++) {
@@ -268,12 +266,14 @@ NAPI_METHOD(turbo_net_tcp_writev) {
     NAPI_BUFFER(next_buf, element)
     napi_get_element(env, lengths, i, &element);
     NAPI_UINT32(next_len, element)
-    ptr->base = next_buf;
-    ptr->len = next_len;
-    ptr++;
+    *ptr++ = (uv_buf_t) { .base = next_buf, .len = next_len };
   }
 
   NAPI_UV_THROWS(err, uv_write(req, TURBO_NET_STREAM, bufs, len, on_uv_write))
+
+#ifdef _WIN32
+  free(bufs);
+#endif
 
   return NULL;
 }
@@ -306,7 +306,11 @@ NAPI_METHOD(turbo_net_tcp_port) {
   struct sockaddr_in addr;
   int addr_len = sizeof(struct sockaddr_in);
 
-  NAPI_UV_THROWS(err, uv_tcp_getsockname(&(self->handle), (struct sockaddr *) &addr, &addr_len))
+  NAPI_UV_THROWS(err, uv_tcp_getsockname(
+    &(self->handle),
+    (struct sockaddr *) &addr,
+    &addr_len
+  ))
 
   int port = ntohs(addr.sin_port);
 
@@ -320,14 +324,16 @@ NAPI_METHOD(turbo_net_tcp_connect) {
   NAPI_ARGV_UTF8(ip, 17, 2)
 
   int err;
-
   struct sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  inet_aton(ip, (struct in_addr *) &addr.sin_addr.s_addr);
-  const struct sockaddr *addr_ptr = (const struct sockaddr *) &addr;
 
-  NAPI_UV_THROWS(err, uv_tcp_connect(&(self->connect), &(self->handle), addr_ptr, on_uv_connect))
+  NAPI_UV_THROWS(err, uv_ip4_addr(ip, port, &addr))
+
+  NAPI_UV_THROWS(err, uv_tcp_connect(
+    &(self->connect),
+    &(self->handle),
+    (const struct sockaddr *) &addr,
+    on_uv_connect)
+  )
 
   return NULL;
 }
