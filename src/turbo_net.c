@@ -1,8 +1,10 @@
 #include <uv.h>
 #include <node_api.h>
 #include <napi-macros.h>
-
 #include <stdio.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #define TURBO_NET_STREAM (uv_stream_t *) &(self->handle)
 
