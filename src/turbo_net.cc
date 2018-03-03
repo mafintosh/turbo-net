@@ -68,10 +68,7 @@ static void on_uv_connection (uv_stream_t* server, int status) {
 
 static void on_uv_alloc (uv_handle_t *handle, size_t size, uv_buf_t *buf) {
   const turbo_net_tcp_t *self = (const turbo_net_tcp_t *) handle->data;
-  const uv_buf_t *reading = &(self->reading);
-
-  buf->base = reading->base;
-  buf->len = reading->len;
+  *buf = self->reading;
 }
 
 static void on_uv_read (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
@@ -216,8 +213,8 @@ NAPI_METHOD(turbo_net_tcp_write) {
 
   int err;
   const uv_buf_t buf = {
-    .base = buffer,
-    .len = len
+    buffer,
+    len
   };
 
   NAPI_UV_THROWS(err, uv_write(req, TURBO_NET_STREAM, &buf, 1, on_uv_write))
