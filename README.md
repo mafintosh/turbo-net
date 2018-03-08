@@ -39,7 +39,7 @@ server.listen(8080, function () {
 
 ## Performance
 
-Running the echo server examples in `./examples` I get the following througput on my laptop
+Running the echo server examples in `./examples` I get the following throughput on my laptop
 
 * echo-classic: 1.3GB/s at ~100MB of ram
 * echo-turbo: 3.4GB/s at ~35MB of ram
@@ -135,7 +135,7 @@ The callback is called with `callback(err, buffer, length)`.
 Write more than one buffer at once. Optionally you can specify how many bytes in
 each buffer you want to write.
 
-The callback is called with `callback(err, buffers, lengths)`
+The callback is called with `callback(err, buffers, lengths)`.
 
 #### `connection.end([callback])`
 
