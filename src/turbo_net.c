@@ -187,7 +187,7 @@ NAPI_METHOD(turbo_net_tcp_listen) {
   ))
 
   // TODO: research backlog
-  NAPI_UV_THROWS(err, uv_listen(TURBO_NET_STREAM, 5, on_uv_connection));
+  NAPI_UV_THROWS(err, uv_listen(TURBO_NET_STREAM, 511, on_uv_connection));
 
   return NULL;
 }
