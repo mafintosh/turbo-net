@@ -80,7 +80,6 @@ tape('writev twice', function (t) {
 
     read(client, 14 + 11, function (err, buf) {
       t.error(err, 'no error')
-      console.log(buf.toString())
       t.same(buf, Buffer.from('hej verden og hello world'))
       server.close()
       client.close(() => t.end())
