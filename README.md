@@ -68,7 +68,7 @@ Emitted when the server is listening.
 
 Unordered array containing the current active connections
 
-#### `server.listen(port, [address], [onlistening])`
+#### `server.listen(port, [address], [backlog], [onlistening])`
 
 Listen on a port.
 
