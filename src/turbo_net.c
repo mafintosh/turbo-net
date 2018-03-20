@@ -170,10 +170,11 @@ NAPI_METHOD(turbo_net_tcp_destroy) {
 }
 
 NAPI_METHOD(turbo_net_tcp_listen) {
-  NAPI_ARGV(3)
+  NAPI_ARGV(4)
   NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
   NAPI_ARGV_UINT32(port, 1)
   NAPI_ARGV_UTF8(ip, 17, 2)
+  NAPI_ARGV_UINT32(backlog, 3)
 
   int err;
   struct sockaddr_in addr;
@@ -187,7 +188,7 @@ NAPI_METHOD(turbo_net_tcp_listen) {
   ))
 
   // TODO: research backlog
-  NAPI_UV_THROWS(err, uv_listen(TURBO_NET_STREAM, 511, on_uv_connection));
+  NAPI_UV_THROWS(err, uv_listen(TURBO_NET_STREAM, backlog, on_uv_connection));
 
   return NULL;
 }
