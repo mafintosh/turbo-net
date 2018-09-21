@@ -1,5 +1,7 @@
 const tape = require('tape')
 const turbo = require('../')
+const os = require('os')
+const semver = require('semver')
 
 tape('listen', function (t) {
   const server = turbo.createServer()
@@ -66,6 +68,18 @@ tape('listen on used port', function (t) {
 })
 
 tape('listen on used port (SO_REUSEPORT)', function (t) {
+  if (os.platform() === 'windows') {
+    t.pass('SO_REUSEPORT not supported on windows')
+    t.end()
+    return
+  }
+
+  if (os.platform() === 'linux' && !semver.satisfies(semver.coerce(os.release()), '>=3.9')) {
+    t.pass('SO_REUSEPORT only supported on kernel 3.9+')
+    t.end()
+    return
+  }
+
   const server = turbo.createServer()
 
   server.listen(function () {
