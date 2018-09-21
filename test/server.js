@@ -68,12 +68,6 @@ tape('listen on used port', function (t) {
 })
 
 tape(`listen on used port (SO_REUSEPORT) (${os.platform()}:${os.release()})`, function (t) {
-  if (os.platform() === 'win32') {
-    t.pass('SO_REUSEPORT not supported on windows')
-    t.end()
-    return
-  }
-
   if (os.platform() === 'linux' && !semver.satisfies(semver.coerce(os.release()), '>=3.9')) {
     t.pass('SO_REUSEPORT only supported on kernel 3.9+')
     t.end()

@@ -142,9 +142,17 @@ NAPI_METHOD(turbo_net_tcp_init) {
   handle->data = self;
   self->env = env;
 
-  // SO_REUSEPORT is not available on windows
+  // SO_REUSEADDR on windows
   #ifdef _WIN32
-  NAPI_UV_THROWS(err, uv_tcp_init(uv_default_loop(), handle));
+    if (!reusePort) {
+        NAPI_UV_THROWS(err, uv_tcp_init(uv_default_loop(), handle));
+    } else {
+        NAPI_UV_THROWS(err, uv_tcp_init_ex(uv_default_loop(), handle, AF_INET));
+        uv_os_fd_t fd;
+        int on = 1;
+        NAPI_UV_THROWS(err, uv_fileno((const uv_handle_t *) handle, &fd));
+        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+    }
   #else
   if (!reusePort) {
       NAPI_UV_THROWS(err, uv_tcp_init(uv_default_loop(), handle));
