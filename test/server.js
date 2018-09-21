@@ -46,10 +46,14 @@ tape('address no listen', function (t) {
 })
 
 tape('listen on used port', function (t) {
-  const server = turbo.createServer()
+  const server = turbo.createServer({
+    reusePort: false
+  })
 
   server.listen(function () {
-    const another = turbo.createServer()
+    const another = turbo.createServer({
+      reusePort: false
+    })
 
     another.on('error', function (err) {
       server.close()
@@ -58,5 +62,20 @@ tape('listen on used port', function (t) {
     })
 
     another.listen(server.address().port)
+  })
+})
+
+tape('listen on used port (SO_REUSEPORT)', function (t) {
+  const server = turbo.createServer()
+
+  server.listen(function () {
+    const another = turbo.createServer()
+
+    another.listen(server.address().port, function () {
+      server.close()
+      another.close()
+      t.pass('should not error')
+      t.end()
+    })
   })
 })
