@@ -197,7 +197,7 @@ NAPI_METHOD(turbo_net_tcp_listen) {
   NAPI_UV_THROWS(err, uv_tcp_bind(
     &(self->handle),
     (const struct sockaddr *) &addr,
-    4
+    0
   ))
 
   // TODO: research backlog
