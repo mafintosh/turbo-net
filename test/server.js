@@ -67,7 +67,7 @@ tape('listen on used port', function (t) {
   })
 })
 
-tape('listen on used port (SO_REUSEPORT)', function (t) {
+tape(`listen on used port (SO_REUSEPORT) (${os.platform()}:${os.release()})`, function (t) {
   if (os.platform() === 'windows') {
     t.pass('SO_REUSEPORT not supported on windows')
     t.end()
