@@ -88,6 +88,7 @@ Connect to a TCP server. Options include:
 ``` js
 {
   allowHalfOpen: false // set to true to allow half open TCP connections
+  reusePort: true // Disable if you don't want SO_REUSEPORT to be set
 }
 ```
 

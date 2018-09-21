@@ -132,8 +132,9 @@ static void on_uv_connect (uv_connect_t* req, int status) {
 }
 
 NAPI_METHOD(turbo_net_tcp_init) {
-  NAPI_ARGV(8)
+  NAPI_ARGV(9)
   NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
+  NAPI_ARGV_UINT32(reusePort, 8)
 
   int err;
   uv_tcp_t *handle = &(self->handle);
@@ -141,7 +142,20 @@ NAPI_METHOD(turbo_net_tcp_init) {
   handle->data = self;
   self->env = env;
 
+  // SO_REUSEPORT is not available on windows
+  #ifdef _WIN32
   NAPI_UV_THROWS(err, uv_tcp_init(uv_default_loop(), handle));
+  #else
+  if (!reusePort) {
+      NAPI_UV_THROWS(err, uv_tcp_init(uv_default_loop(), handle));
+  } else {
+      NAPI_UV_THROWS(err, uv_tcp_init_ex(uv_default_loop(), handle, AF_INET));
+      uv_os_fd_t fd;
+      int on = 1;
+      NAPI_UV_THROWS(err, uv_fileno((const uv_handle_t *) handle, &fd));
+      setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on));
+  }
+  #endif
 
   napi_create_reference(env, argv[1], 1, &(self->ctx));
   napi_create_reference(env, argv[2], 1, &(self->on_alloc_connection));
@@ -183,7 +197,7 @@ NAPI_METHOD(turbo_net_tcp_listen) {
   NAPI_UV_THROWS(err, uv_tcp_bind(
     &(self->handle),
     (const struct sockaddr *) &addr,
-    0
+    4
   ))
 
   // TODO: research backlog
