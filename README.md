@@ -52,7 +52,8 @@ Create a new TCP server. Options include:
 
 ``` js
 {
-  allowHalfOpen: false // set to true to allow half open TCP connections
+  allowHalfOpen: false, // set to true to allow half open TCP connections
+  reusePort: true // Disable if you don't want SO_REUSEPORT to be set (SO_REUSEADDR on windows)
 }
 ```
 
