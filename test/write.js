@@ -2,7 +2,7 @@ const tape = require('tape')
 const turbo = require('../')
 
 tape('writev', function (t) {
-  const server = turbo.createServer(echo)
+  const server = turbo.createServer(echo, {reusePort: false})
 
   server.listen(function () {
     const client = turbo.connect(server.address().port)
@@ -22,7 +22,7 @@ tape('writev', function (t) {
 })
 
 tape('writev after connect', function (t) {
-  const server = turbo.createServer(echo)
+  const server = turbo.createServer(echo, {reusePort: false})
 
   server.listen(function () {
     const client = turbo.connect(server.address().port)
@@ -44,7 +44,7 @@ tape('writev after connect', function (t) {
 })
 
 tape('writev before and after connect', function (t) {
-  const server = turbo.createServer(echo)
+  const server = turbo.createServer(echo, {reusePort: false})
 
   server.listen(function () {
     const client = turbo.connect(server.address().port)
@@ -73,7 +73,7 @@ tape('writev before and after connect', function (t) {
 })
 
 tape('writev twice', function (t) {
-  const server = turbo.createServer(echo)
+  const server = turbo.createServer(echo, {reusePort: false})
 
   server.listen(function () {
     const client = turbo.connect(server.address().port)
@@ -99,7 +99,7 @@ tape('writev twice', function (t) {
 })
 
 tape('write 256 buffers', function (t) {
-  const server = turbo.createServer(echo)
+  const server = turbo.createServer(echo, {reusePort: false})
 
   server.listen(function () {
     const client = turbo.connect(server.address().port)
