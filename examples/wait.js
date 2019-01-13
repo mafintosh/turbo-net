@@ -1,7 +1,7 @@
 const turbo = require('../')
 
 const server = turbo.createServer(function (socket) {
-  console.log(socket.connection.remoteAddress, socket.connection.remotePort)
+  console.log(socket.remoteFamily, socket.remoteAddress, socket.remotePort)
 
   socket.close()
 })
