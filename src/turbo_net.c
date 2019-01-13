@@ -317,6 +317,45 @@ NAPI_METHOD(turbo_net_tcp_port) {
   NAPI_RETURN_UINT32(port)
 }
 
+NAPI_METHOD(turbo_net_tcp_remote_port) {
+  NAPI_ARGV(1)
+  NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
+
+  int err;
+  struct sockaddr_in addr;
+  int addr_len = sizeof(struct sockaddr_in);
+
+  NAPI_UV_THROWS(err, uv_tcp_getpeername(
+    &(self->handle),
+    (struct sockaddr *) &addr,
+    &addr_len
+  ))
+
+  int port = ntohs(addr.sin_port);
+
+  NAPI_RETURN_UINT32(port)
+}
+
+NAPI_METHOD(turbo_net_tcp_remote_address) {
+  NAPI_ARGV(1)
+  NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
+
+  int err;
+  struct sockaddr_in addr;
+  int addr_len = sizeof(struct sockaddr_in);
+
+  NAPI_UV_THROWS(err, uv_tcp_getpeername(
+    &(self->handle),
+    (struct sockaddr *) &addr,
+    &addr_len
+  ))
+
+  char ip[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, &addr.sin_addr, ip, INET_ADDRSTRLEN);
+
+  NAPI_RETURN_STRING(ip)
+}
+
 NAPI_METHOD(turbo_net_tcp_connect) {
   NAPI_ARGV(3)
   NAPI_ARGV_BUFFER_CAST(turbo_net_tcp_t *, self, 0)
@@ -351,6 +390,8 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_destroy)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_listen)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_connect)
+  NAPI_EXPORT_FUNCTION(turbo_net_tcp_remote_port)
+  NAPI_EXPORT_FUNCTION(turbo_net_tcp_remote_address)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_port)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_write)
   NAPI_EXPORT_FUNCTION(turbo_net_tcp_write_two)

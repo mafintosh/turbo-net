@@ -111,6 +111,10 @@ Emitted when the writable side is fully closed.
 
 Emitted when the readable side is fully closed.
 
+#### `connection.on('timeout')`
+
+Emitted when the timeout it's reached. Is only a notification, you should end the connection.
+
 #### `connection.close([callback])`
 
 Closes the connection.
@@ -140,6 +144,22 @@ The callback is called with `callback(err, buffers, lengths)`.
 #### `connection.end([callback])`
 
 End the writable side of the connection.
+
+#### `connection.setTimeout(millis, [callback])`
+
+Set timeout on the connection. Optionally you can provide an callback. If millis is setted on 0, then it disabled.
+
+#### `connection.remoteAddress`
+
+The IP address of the connection. For example, '172.217.28.163'.
+
+#### `connection.remoteFamily`
+
+The IP family of the connection. Before the event "connect" or "connection" it's a empty string and after it's always "IPv4".
+
+#### `connection.remotePort`
+
+The remote port. For example, 63750.
 
 ## License
 
