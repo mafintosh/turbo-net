@@ -149,6 +149,18 @@ End the writable side of the connection.
 
 Set timeout on the connection. Optionally you can provide an callback. If millis is setted on 0, then it disabled.
 
+#### `connection.remoteAddress`
+
+The IP address of the connection. For example, '172.217.28.163'.
+
+#### `connection.remoteFamily`
+
+The IP family of the connection. Before the event "connect" or "connection" it's a empty string and after it's always "IPv4".
+
+#### `connection.remotePort`
+
+The remote port. For example, 63750.
+
 ## License
 
 MIT
